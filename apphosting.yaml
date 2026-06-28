@@ -1,0 +1,46 @@
+# Firebase App Hosting config for InflConnect
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# BEFORE DEPLOY:
+# 1. Create backend in Firebase Console (App Hosting) with backendId: inflconnect
+# 2. Set secrets (see commands in README or deploy guide)
+# 3. Set NEXT_PUBLIC_* vars in Firebase Console → App Hosting → Environment
+#    (paste from .env.local — do NOT commit .env.local)
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_ADMIN_EMAILS
+    value: phoolprakash62@gmail.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: FIREBASE_PROJECT_ID
+    value: infl-6ef8c
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Update after first deploy with your live App Hosting URL
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://inflconnect--infl-6ef8c.us-central1.hosted.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Store via: firebase apphosting:secrets:set FIREBASE_PRIVATE_KEY
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY
+
+  # Optional if not set in Firebase Console Environment tab:
+  # - variable: FIREBASE_CLIENT_EMAIL
+  #   secret: FIREBASE_CLIENT_EMAIL
+  # - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+  #   secret: NEXT_PUBLIC_FIREBASE_API_KEY
+  # (etc. for other NEXT_PUBLIC_FIREBASE_* from .env.local)

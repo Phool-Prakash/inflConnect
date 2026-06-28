@@ -5,5 +5,20 @@
   },
   "storage": {
     "rules": "storage.rules"
-  }
+  },
+  "apphosting": [
+    {
+      "backendId": "inflconnect",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions",
+        ".env.local",
+        ".env*.local"
+      ]
+    }
+  ]
 }
