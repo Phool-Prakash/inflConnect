@@ -1,10 +1,6 @@
 import "server-only";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import { getStorage } from "firebase-admin/storage";
 
-let initialized = false;
+let initPromise = null;
 
 function normalizePrivateKey(raw) {
   if (!raw) return undefined;
@@ -18,10 +14,10 @@ function normalizePrivateKey(raw) {
   return key.replace(/\\n/g, "\n");
 }
 
-function ensureAdminApp() {
-  if (initialized) return;
+async function ensureAdminApp() {
+  if (initPromise) return initPromise;
 
-  if (getApps().length === 0) {
+  initPromise = (async () => {
     const projectId = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
@@ -30,38 +26,53 @@ function ensureAdminApp() {
       throw new Error("Firebase Admin SDK is not configured.");
     }
 
-    initializeApp({
-      credential: cert({ projectId, clientEmail, privateKey }),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    });
-  }
+    const { initializeApp, getApps, cert } = await import("firebase-admin/app");
 
-  initialized = true;
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey }),
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      });
+    }
+  })();
+
+  try {
+    await initPromise;
+  } catch (error) {
+    initPromise = null;
+    throw error;
+  }
 }
 
-function getAdminDb() {
+async function getAdminDb() {
   try {
-    ensureAdminApp();
+    await ensureAdminApp();
+    const { getFirestore } = await import("firebase-admin/firestore");
     return getFirestore();
-  } catch {
+  } catch (error) {
+    console.error("getAdminDb:", error.message);
     return null;
   }
 }
 
-function getAdminAuth() {
+async function getAdminAuth() {
   try {
-    ensureAdminApp();
+    await ensureAdminApp();
+    const { getAuth } = await import("firebase-admin/auth");
     return getAuth();
-  } catch {
+  } catch (error) {
+    console.error("getAdminAuth:", error.message);
     return null;
   }
 }
 
-function getAdminStorage() {
+async function getAdminStorage() {
   try {
-    ensureAdminApp();
+    await ensureAdminApp();
+    const { getStorage } = await import("firebase-admin/storage");
     return getStorage();
-  } catch {
+  } catch (error) {
+    console.error("getAdminStorage:", error.message);
     return null;
   }
 }

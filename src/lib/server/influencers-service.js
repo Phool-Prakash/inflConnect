@@ -1,5 +1,4 @@
 import "server-only";
-import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb, getAdminStorage } from "@/lib/server/firebase-admin";
 
 const COLLECTION = "influencers";
@@ -24,7 +23,7 @@ export function toPublicInfluencer(data) {
 }
 
 export async function uploadProfileImageServer(file) {
-  const storage = getAdminStorage();
+  const storage = await getAdminStorage();
   if (!storage) throw new Error("Firebase Admin SDK is not configured.");
   const bucket = storage.bucket();
   const ext = file.name.split(".").pop() || "jpg";
@@ -41,7 +40,7 @@ export async function uploadProfileImageServer(file) {
 }
 
 export async function listApprovedInfluencersServer({ city } = {}) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) return [];
   let query = db
     .collection(COLLECTION)
@@ -57,7 +56,7 @@ export async function listApprovedInfluencersServer({ city } = {}) {
 }
 
 export async function getInfluencerServer(id, { admin = false } = {}) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) return null;
   const snapshot = await db.collection(COLLECTION).doc(id).get();
   const data = docToObject(snapshot);
@@ -67,7 +66,7 @@ export async function getInfluencerServer(id, { admin = false } = {}) {
 }
 
 export async function listInfluencersByStatusServer(status) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) return [];
   const snapshot = await db
     .collection(COLLECTION)
@@ -90,8 +89,9 @@ export async function listAllInfluencersServer() {
 }
 
 export async function createInfluencerServer(data) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) throw new Error("Firebase Admin SDK is not configured.");
+  const { FieldValue } = await import("firebase-admin/firestore");
   const ref = await db.collection(COLLECTION).add({
     ...data,
     createdAt: FieldValue.serverTimestamp(),
@@ -100,19 +100,19 @@ export async function createInfluencerServer(data) {
 }
 
 export async function updateInfluencerServer(id, data) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) throw new Error("Firebase Admin SDK is not configured.");
   await db.collection(COLLECTION).doc(id).update(data);
 }
 
 export async function deleteInfluencerServer(id) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) throw new Error("Firebase Admin SDK is not configured.");
   await db.collection(COLLECTION).doc(id).delete();
 }
 
 export async function bulkApproveServer(ids) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) throw new Error("Firebase Admin SDK is not configured.");
   const batch = db.batch();
   ids.forEach((id) => {
@@ -122,7 +122,7 @@ export async function bulkApproveServer(ids) {
 }
 
 export async function bulkDeleteServer(ids) {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) throw new Error("Firebase Admin SDK is not configured.");
   const batch = db.batch();
   ids.forEach((id) => {

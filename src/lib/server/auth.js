@@ -9,14 +9,14 @@ export async function verifyAdminRequest(request) {
     return { error: jsonError("Unauthorized", 401) };
   }
 
-  const auth = getAdminAuth();
+  const auth = await getAdminAuth();
   if (!auth) {
     return { error: jsonError("Server configuration error", 503) };
   }
 
   const token = header.slice(7);
   try {
-    const decoded = await getAdminAuth().verifyIdToken(token);
+    const decoded = await auth.verifyIdToken(token);
     if (!isAdminEmailServer(decoded.email)) {
       return { error: jsonError("Forbidden", 403) };
     }

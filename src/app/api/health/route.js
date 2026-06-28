@@ -16,7 +16,7 @@ export async function GET() {
   }
 
   try {
-    const db = getAdminDb();
+    const db = await getAdminDb();
     if (!db) {
       return jsonError("Firebase Admin failed to initialize", 503, {
         firebase: "init_failed",
