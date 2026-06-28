@@ -1,17 +1,36 @@
 import { jsonOk, jsonError } from "@/lib/server/api-response";
-import { getAdminDb } from "@/lib/server/firebase-admin";
+import { getAdminDb, resolveAdminCredentials } from "@/lib/server/firebase-admin";
 
 /** GET /api/health — check Firebase Admin connectivity (for deploy debugging) */
 export async function GET() {
-  const hasEnv =
-    Boolean(process.env.FIREBASE_PROJECT_ID) &&
-    Boolean(process.env.FIREBASE_CLIENT_EMAIL) &&
-    Boolean(process.env.FIREBASE_PRIVATE_KEY);
+  let credentials;
+  try {
+    credentials = resolveAdminCredentials();
+  } catch {
+    return jsonError("FIREBASE_SERVICE_ACCOUNT is not valid JSON", 503, {
+      firebase: "invalid_json",
+    });
+  }
+
+  const envStatus = {
+    FIREBASE_PROJECT_ID: Boolean(process.env.FIREBASE_PROJECT_ID),
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: Boolean(
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    ),
+    FIREBASE_CLIENT_EMAIL: Boolean(process.env.FIREBASE_CLIENT_EMAIL),
+    FIREBASE_PRIVATE_KEY: Boolean(process.env.FIREBASE_PRIVATE_KEY),
+    FIREBASE_SERVICE_ACCOUNT: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT),
+  };
+
+  const hasEnv = Boolean(
+    credentials.projectId && credentials.clientEmail && credentials.privateKey
+  );
 
   if (!hasEnv) {
     return jsonError("Firebase Admin env vars missing", 503, {
       firebase: "missing_env",
-      hint: "Add FIREBASE_* vars on Vercel, then Redeploy.",
+      env: envStatus,
+      hint: "Add FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY on Vercel (Production enabled), OR paste full service-account JSON as FIREBASE_SERVICE_ACCOUNT. Then Redeploy.",
     });
   }
 

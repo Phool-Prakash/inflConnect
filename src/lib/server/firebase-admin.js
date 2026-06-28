@@ -14,13 +14,45 @@ function normalizePrivateKey(raw) {
   return key.replace(/\\n/g, "\n");
 }
 
+function resolveAdminCredentials() {
+  const jsonRaw =
+    process.env.FIREBASE_SERVICE_ACCOUNT ||
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+
+  if (jsonRaw) {
+    try {
+      const cred = JSON.parse(jsonRaw);
+      return {
+        projectId: cred.project_id,
+        clientEmail: cred.client_email,
+        privateKey: normalizePrivateKey(cred.private_key),
+      };
+    } catch {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON.");
+    }
+  }
+
+  return {
+    projectId:
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+  };
+}
+
 async function ensureAdminApp() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
+    let credentials;
+    try {
+      credentials = resolveAdminCredentials();
+    } catch {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON.");
+    }
+
+    const { projectId, clientEmail, privateKey } = credentials;
 
     if (!projectId || !clientEmail || !privateKey) {
       throw new Error("Firebase Admin SDK is not configured.");
@@ -77,4 +109,4 @@ async function getAdminStorage() {
   }
 }
 
-export { getAdminDb, getAdminAuth, getAdminStorage, ensureAdminApp };
+export { getAdminDb, getAdminAuth, getAdminStorage, ensureAdminApp, resolveAdminCredentials };
