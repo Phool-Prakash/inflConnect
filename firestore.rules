@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Production rules: reads for approved profiles only.
+// ALL writes go through server API (Firebase Admin SDK).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /influencers/{influencerId} {
+      allow get: if resource.data.status == "approved";
+      allow list: if resource.data.status == "approved";
+      allow create, update, delete: if false;
+    }
+  }
+}

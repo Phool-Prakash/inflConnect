@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Uploads only via server API (Admin SDK). Public read for profile images.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /influencers/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
