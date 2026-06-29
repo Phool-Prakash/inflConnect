@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MapPin, Search } from "lucide-react";
 import { CITIES } from "@/lib/constants";
-import { fetchApprovedInfluencers } from "@/lib/api-client";
+import { fetchApprovedInfluencers } from "@/lib/public-api";
 import InfluencerCard from "@/components/InfluencerCard";
 import SkeletonCard from "@/components/SkeletonCard";
 

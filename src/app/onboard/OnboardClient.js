@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import InfluencerForm from "@/components/InfluencerForm";
-import { submitOnboarding } from "@/lib/api-client";
+import { submitOnboarding } from "@/lib/public-api";
 
 const STEPS = [
   { title: "Profile", desc: "Photo & basic info" },

@@ -31,13 +31,14 @@ function getMissingFirebaseEnvVars() {
 }
 
 function initFirebase() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return false;
 
   const missing = getMissingFirebaseEnvVars();
   if (missing.length > 0) {
-    throw new Error(
-      `Missing Firebase env vars: ${missing.join(", ")}. Check your .env.local file and restart the dev server.`
+    console.error(
+      `Missing Firebase env vars: ${missing.join(", ")}. Rebuild after setting NEXT_PUBLIC_FIREBASE_* on Vercel.`
     );
+    return false;
   }
 
   if (!app) {
@@ -46,14 +47,13 @@ function initFirebase() {
     db = getFirestore(app);
     storage = getStorage(app);
   }
-}
 
-// Initialize on first client-side import
-initFirebase();
+  return true;
+}
 
 function getFirebaseAuth() {
   initFirebase();
-  return auth;
+  return auth ?? null;
 }
 
 export { auth, db, storage, initFirebase, getFirebaseAuth };
