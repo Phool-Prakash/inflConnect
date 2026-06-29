@@ -1,4 +1,5 @@
 import { verifyAdminRequest } from "@/lib/server/auth";
+import { getAdminEmails } from "@/lib/server/admin-emails";
 import { jsonError, jsonOk } from "@/lib/server/api-response";
 import {
   validateImageFile,
@@ -14,6 +15,13 @@ import {
 
 /** GET /api/admin/influencers?status=pending|approved */
 export async function GET(request) {
+  if (getAdminEmails().length === 0) {
+    return jsonError(
+      "Admin emails not configured. Set ADMIN_EMAILS or NEXT_PUBLIC_ADMIN_EMAILS on Vercel and redeploy.",
+      503
+    );
+  }
+
   const auth = await verifyAdminRequest(request);
   if (auth.error) return auth.error;
 

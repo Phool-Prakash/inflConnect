@@ -1,9 +1,18 @@
 import "server-only";
 import { getAdminAuth } from "@/lib/server/firebase-admin";
-import { isAdminEmailServer } from "@/lib/server/admin-emails";
+import { getAdminEmails, isAdminEmailServer } from "@/lib/server/admin-emails";
 import { jsonError } from "@/lib/server/api-response";
 
 export async function verifyAdminRequest(request) {
+  if (getAdminEmails().length === 0) {
+    return {
+      error: jsonError(
+        "Admin emails not configured on server. Set ADMIN_EMAILS=phoolprakash62@gmail.com on Vercel and redeploy.",
+        503
+      ),
+    };
+  }
+
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) {
     return { error: jsonError("Unauthorized", 401) };
@@ -20,10 +29,21 @@ export async function verifyAdminRequest(request) {
   try {
     const decoded = await auth.verifyIdToken(token);
     if (!isAdminEmailServer(decoded.email)) {
-      return { error: jsonError("Forbidden", 403) };
+      return {
+        error: jsonError(
+          `Forbidden: ${decoded.email} is not in the admin list. Set ADMIN_EMAILS or NEXT_PUBLIC_ADMIN_EMAILS on Vercel (e.g. phoolprakash62@gmail.com) and redeploy.`,
+          403
+        ),
+      };
     }
     return { user: decoded };
-  } catch {
-    return { error: jsonError("Invalid or expired token", 401) };
+  } catch (err) {
+    console.error("verifyIdToken:", err?.message);
+    return {
+      error: jsonError(
+        "Invalid or expired login token. Sign out, sign in again, and ensure infl-connect.vercel.app is in Firebase Auth authorized domains.",
+        401
+      ),
+    };
   }
 }

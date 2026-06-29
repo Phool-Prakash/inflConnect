@@ -83,7 +83,8 @@ export default function AdminClient() {
       } catch (err) {
         console.error("Failed to load admin data:", err);
         setDataError(
-          "Could not load influencers. Deploy Firestore rules: firebase deploy --only firestore:rules"
+          err.message ||
+            "Could not load influencers. Check browser console for details."
         );
       } finally {
         setDataLoading(false);

@@ -1,7 +1,11 @@
 import "server-only";
 
 export function getAdminEmails() {
-  return (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+  const raw =
+    process.env.ADMIN_EMAILS ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
+    "";
+  return raw
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
