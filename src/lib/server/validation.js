@@ -3,12 +3,19 @@ import { NICHES, STATUSES, EMAIL_REGEX } from "@/lib/constants";
 import { isValidState, isValidCity } from "@/lib/data/india-locations";
 import { buildYouTubeUrl, isValidYouTubeInput } from "@/lib/youtube";
 import { buildInstagramUrl, isValidInstagramInput } from "@/lib/instagram";
+import { buildFacebookUrl, isValidFacebookInput } from "@/lib/facebook";
 import { normalizePhone, isValidPhone } from "@/lib/phone";
 
 function normalizeYouTubeField(input) {
   const trimmed = (input || "").trim();
   if (!trimmed) return "";
   return buildYouTubeUrl(trimmed) || "";
+}
+
+function normalizeFacebookField(input) {
+  const trimmed = (input || "").trim();
+  if (!trimmed) return "";
+  return buildFacebookUrl(trimmed) || "";
 }
 
 function normalizeInstagramField(input) {
@@ -47,6 +54,8 @@ export function validateInfluencerFields(data, { requireImage = false } = {}) {
   if (requireImage && !data.profilePicUrl) errors.push("profile picture is required");
   const youtubeRaw = (data.youtube ?? data.tiktokYoutube ?? "").trim();
   if (youtubeRaw && !isValidYouTubeInput(youtubeRaw)) errors.push("invalid youtube");
+  const facebookRaw = (data.facebook ?? "").trim();
+  if (facebookRaw && !isValidFacebookInput(facebookRaw)) errors.push("invalid facebook");
 
   return errors;
 }
@@ -67,6 +76,7 @@ export function sanitizeInfluencerInput(data) {
     phone: normalizePhone(data.phone),
     instagram: normalizeInstagramField(data.instagram),
     youtube: normalizeYouTubeField(data.youtube ?? data.tiktokYoutube),
+    facebook: normalizeFacebookField(data.facebook),
     niche: data.niche,
     state: data.state,
     city: data.city,

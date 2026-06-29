@@ -4,6 +4,7 @@ import Image from "next/image";
 import { X, Loader2 } from "lucide-react";
 import { formatFollowers } from "@/lib/constants";
 import { formatPhoneDisplay } from "@/lib/phone";
+import ProfileAvatar from "@/components/ProfileAvatar";
 
 function ReviewRow({ label, value }) {
   return (
@@ -58,13 +59,15 @@ export default function SubmitReviewModal({
         </div>
 
         <div className="px-6 py-4">
-          {previewUrl && (
-            <div className="flex justify-center mb-4">
-              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200">
+          <div className="flex justify-center mb-4">
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+              {previewUrl ? (
                 <Image src={previewUrl} alt="Profile" fill className="object-cover" />
-              </div>
+              ) : (
+                <ProfileAvatar src={null} alt="Profile" iconSize="sm" />
+              )}
             </div>
-          )}
+          </div>
 
           <dl>
             <ReviewRow label="Full Name" value={form.fullName} />
@@ -72,6 +75,7 @@ export default function SubmitReviewModal({
             <ReviewRow label="Phone" value={formatPhoneDisplay(form.phone)} />
             <ReviewRow label="Instagram" value={form.instagram} />
             <ReviewRow label="YouTube" value={form.youtube || "Not provided"} />
+            <ReviewRow label="Facebook" value={form.facebook || "Not provided"} />
             <ReviewRow label="Content Category" value={form.niche} />
             <ReviewRow label="State" value={form.state} />
             <ReviewRow label="City" value={form.city} />

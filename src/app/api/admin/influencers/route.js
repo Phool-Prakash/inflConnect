@@ -55,6 +55,7 @@ export async function POST(request) {
       phone: String(formData.get("phone") || ""),
       instagram: String(formData.get("instagram") || ""),
       youtube: String(formData.get("youtube") || ""),
+      facebook: String(formData.get("facebook") || ""),
       niche: String(formData.get("niche") || ""),
       state: String(formData.get("state") || ""),
       city: String(formData.get("city") || ""),

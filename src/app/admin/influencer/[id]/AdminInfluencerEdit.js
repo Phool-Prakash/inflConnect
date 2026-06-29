@@ -16,6 +16,7 @@ import InfluencerForm from "@/components/InfluencerForm";
 import { formatPhoneDisplay } from "@/lib/phone";
 import { buildInstagramUrl } from "@/lib/instagram";
 import { buildYouTubeUrl } from "@/lib/youtube";
+import { buildFacebookUrl } from "@/lib/facebook";
 
 export default function AdminInfluencerEdit({ id }) {
   const router = useRouter();
@@ -76,6 +77,7 @@ export default function AdminInfluencerEdit({ id }) {
         phone: formData.phone?.trim() || "",
         instagram: formData.instagram.trim(),
         youtube: formData.youtube?.trim() || "",
+        facebook: formData.facebook?.trim() || "",
         niche: formData.niche,
         state: formData.state,
         city: formData.city,
@@ -200,6 +202,23 @@ export default function AdminInfluencerEdit({ id }) {
                 {buildYouTubeUrl(influencer.youtube) && (
                   <a
                     href={buildYouTubeUrl(influencer.youtube)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 flex-shrink-0"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Visit
+                  </a>
+                )}
+              </div>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-slate-400 block text-xs mb-0.5">Facebook</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-slate-800 truncate flex-1">{influencer.facebook || "—"}</span>
+                {buildFacebookUrl(influencer.facebook) && (
+                  <a
+                    href={buildFacebookUrl(influencer.facebook)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 flex-shrink-0"

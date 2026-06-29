@@ -29,6 +29,7 @@ export async function submitOnboarding(formData) {
   body.append("phone", formData.phone);
   body.append("instagram", formData.instagram);
   body.append("youtube", formData.youtube || "");
+  body.append("facebook", formData.facebook || "");
   body.append("niche", formData.niche);
   body.append("state", formData.state);
   body.append("city", formData.city);

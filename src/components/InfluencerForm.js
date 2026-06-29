@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import { isValidInstagramInput, buildInstagramUrl } from "@/lib/instagram";
 import { isValidYouTubeInput, buildYouTubeUrl } from "@/lib/youtube";
+import { isValidFacebookInput, buildFacebookUrl } from "@/lib/facebook";
 import { isValidPhone } from "@/lib/phone";
 import SubmitReviewModal from "@/components/SubmitReviewModal";
 
@@ -29,6 +30,7 @@ const INITIAL_FORM = {
   phone: "",
   instagram: "",
   youtube: "",
+  facebook: "",
   niche: "",
   state: "",
   city: "",
@@ -63,6 +65,7 @@ export default function InfluencerForm({
         phone: initialData.phone || "",
         instagram: initialData.instagram || "",
         youtube: initialData.youtube || initialData.tiktokYoutube || "",
+        facebook: initialData.facebook || "",
         niche: initialData.niche || "",
         state: initialData.state || findStateForCity(city),
         city,
@@ -128,6 +131,9 @@ export default function InfluencerForm({
     }
     if (form.youtube.trim() && !isValidYouTubeInput(form.youtube)) {
       newErrors.youtube = "Enter a valid YouTube channel link, ID, or @handle.";
+    }
+    if (form.facebook.trim() && !isValidFacebookInput(form.facebook)) {
+      newErrors.facebook = "Enter a valid Facebook profile link or username.";
     }
     if (!form.niche) newErrors.niche = "Please select a content category.";
     if (!form.state) newErrors.state = "Please select your state.";
@@ -197,6 +203,7 @@ export default function InfluencerForm({
 
   const instagramVisitUrl = buildInstagramUrl(form.instagram);
   const youtubeVisitUrl = buildYouTubeUrl(form.youtube);
+  const facebookVisitUrl = buildFacebookUrl(form.facebook);
   const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
   const errorClass = "text-red-500 text-xs mt-1";
 
@@ -344,6 +351,48 @@ export default function InfluencerForm({
                   type="button"
                   disabled
                   title="Enter a valid YouTube link first"
+                  className={visitBtnClass}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="facebook" className={labelClass}>
+            Facebook <span className="text-slate-400 font-normal">(optional)</span>
+          </label>
+          <div className={`flex gap-2 ${showSocialVisitButtons ? "items-start" : ""}`}>
+            <div className="flex-1 min-w-0">
+              <input
+                id="facebook"
+                name="facebook"
+                type="text"
+                value={form.facebook}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="Profile link or username"
+              />
+              {errors.facebook && <p className={errorClass}>{errors.facebook}</p>}
+            </div>
+            {showSocialVisitButtons && (
+              facebookVisitUrl ? (
+                <a
+                  href={facebookVisitUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open Facebook profile"
+                  className={visitBtnClass}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  title="Enter a valid Facebook link first"
                   className={visitBtnClass}
                 >
                   <ExternalLink className="w-4 h-4" />
