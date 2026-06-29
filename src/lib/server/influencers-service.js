@@ -24,7 +24,6 @@ export function toPublicInfluencer(data) {
 
 export async function uploadProfileImageServer(file) {
   const storage = await getAdminStorage();
-  if (!storage) throw new Error("Firebase Admin SDK is not configured.");
   const bucket = storage.bucket();
   const ext = file.name.split(".").pop() || "jpg";
   const path = `influencers/${crypto.randomUUID()}.${ext}`;
@@ -41,23 +40,26 @@ export async function uploadProfileImageServer(file) {
 
 export async function listApprovedInfluencersServer({ city } = {}) {
   const db = await getAdminDb();
-  if (!db) return [];
-  let query = db
+  const snapshot = await db
     .collection(COLLECTION)
     .where("status", "==", "approved")
-    .orderBy("createdAt", "desc");
+    .get();
+
+  let results = snapshot.docs.map(docToObject);
 
   if (city && city !== "All Cities") {
-    query = query.where("city", "==", city);
+    results = results.filter((inf) => inf.city === city);
   }
 
-  const snapshot = await query.get();
-  return snapshot.docs.map(docToObject);
+  return results.sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
 }
 
 export async function getInfluencerServer(id, { admin = false } = {}) {
   const db = await getAdminDb();
-  if (!db) return null;
   const snapshot = await db.collection(COLLECTION).doc(id).get();
   const data = docToObject(snapshot);
   if (!data) return null;
@@ -67,13 +69,17 @@ export async function getInfluencerServer(id, { admin = false } = {}) {
 
 export async function listInfluencersByStatusServer(status) {
   const db = await getAdminDb();
-  if (!db) return [];
   const snapshot = await db
     .collection(COLLECTION)
     .where("status", "==", status)
-    .orderBy("createdAt", "desc")
     .get();
-  return snapshot.docs.map(docToObject);
+  return snapshot.docs
+    .map(docToObject)
+    .sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
 }
 
 export async function listAllInfluencersServer() {

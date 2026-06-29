@@ -26,9 +26,7 @@ export default function HomePage() {
         });
         setInfluencers(data);
       } catch (err) {
-        setError(
-          "Failed to load influencers. If this is your first time, you may need to create a Firestore composite index — check the browser console for the Firebase index link."
-        );
+        setError(err.message || "Failed to load influencers. Please try again.");
         console.error(err);
       } finally {
         setLoading(false);

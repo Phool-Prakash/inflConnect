@@ -9,8 +9,10 @@ export async function verifyAdminRequest(request) {
     return { error: jsonError("Unauthorized", 401) };
   }
 
-  const auth = await getAdminAuth();
-  if (!auth) {
+  let auth;
+  try {
+    auth = await getAdminAuth();
+  } catch {
     return { error: jsonError("Server configuration error", 503) };
   }
 
