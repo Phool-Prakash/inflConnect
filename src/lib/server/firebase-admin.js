@@ -109,20 +109,23 @@ async function ensureAdminApp() {
 
 async function getAdminDb() {
   await ensureAdminApp();
+  const { getApps } = await import("firebase-admin/app");
   const { getFirestore } = await import("firebase-admin/firestore");
-  return getFirestore();
+  return getFirestore(getApps()[0]);
 }
 
 async function getAdminAuth() {
   await ensureAdminApp();
+  const { getApps } = await import("firebase-admin/app");
   const { getAuth } = await import("firebase-admin/auth");
-  return getAuth();
+  return getAuth(getApps()[0]);
 }
 
 async function getAdminStorage() {
   await ensureAdminApp();
+  const { getApps } = await import("firebase-admin/app");
   const { getStorage } = await import("firebase-admin/storage");
-  return getStorage();
+  return getStorage(getApps()[0]);
 }
 
 export { getAdminDb, getAdminAuth, getAdminStorage, ensureAdminApp, resolveAdminCredentials };

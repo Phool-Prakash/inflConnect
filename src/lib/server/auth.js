@@ -21,8 +21,16 @@ export async function verifyAdminRequest(request) {
   let auth;
   try {
     auth = await getAdminAuth();
-  } catch {
-    return { error: jsonError("Server configuration error", 503) };
+  } catch (err) {
+    console.error("getAdminAuth:", err?.message);
+    return {
+      error: jsonError(
+        err?.message?.includes("not configured")
+          ? "Firebase Admin is not configured. Set FIREBASE_SERVICE_ACCOUNT_BASE64 on Vercel and redeploy."
+          : `Firebase Admin Auth error: ${err?.message || "unknown"}. Check FIREBASE_SERVICE_ACCOUNT_BASE64 on Vercel.`,
+        503
+      ),
+    };
   }
 
   const token = header.slice(7);
