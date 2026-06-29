@@ -1,5 +1,5 @@
 import "server-only";
-import { getAdminAuth } from "@/lib/server/firebase-admin";
+import { verifyFirebaseIdToken } from "@/lib/server/verify-id-token";
 import { getAdminEmails, isAdminEmailServer } from "@/lib/server/admin-emails";
 import { jsonError } from "@/lib/server/api-response";
 
@@ -18,38 +18,25 @@ export async function verifyAdminRequest(request) {
     return { error: jsonError("Unauthorized", 401) };
   }
 
-  let auth;
-  try {
-    auth = await getAdminAuth();
-  } catch (err) {
-    console.error("getAdminAuth:", err?.message);
-    return {
-      error: jsonError(
-        err?.message?.includes("not configured")
-          ? "Firebase Admin is not configured. Set FIREBASE_SERVICE_ACCOUNT_BASE64 on Vercel and redeploy."
-          : `Firebase Admin Auth error: ${err?.message || "unknown"}. Check FIREBASE_SERVICE_ACCOUNT_BASE64 on Vercel.`,
-        503
-      ),
-    };
-  }
-
   const token = header.slice(7);
   try {
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await verifyFirebaseIdToken(token);
     if (!isAdminEmailServer(decoded.email)) {
       return {
         error: jsonError(
-          `Forbidden: ${decoded.email} is not in the admin list. Set ADMIN_EMAILS or NEXT_PUBLIC_ADMIN_EMAILS on Vercel (e.g. phoolprakash62@gmail.com) and redeploy.`,
+          `Forbidden: ${decoded.email} is not in the admin list. Set ADMIN_EMAILS or NEXT_PUBLIC_ADMIN_EMAILS on Vercel and redeploy.`,
           403
         ),
       };
     }
     return { user: decoded };
   } catch (err) {
-    console.error("verifyIdToken:", err?.message);
+    console.error("verifyFirebaseIdToken:", err?.message);
     return {
       error: jsonError(
-        "Invalid or expired login token. Sign out, sign in again, and ensure infl-connect.vercel.app is in Firebase Auth authorized domains.",
+        err?.message?.includes("API_KEY")
+          ? "NEXT_PUBLIC_FIREBASE_API_KEY missing on Vercel. Redeploy after adding it."
+          : "Invalid or expired login token. Sign out, sign in again, and ensure infl-connect.vercel.app is in Firebase Auth authorized domains.",
         401
       ),
     };

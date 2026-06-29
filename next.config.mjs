@@ -2,7 +2,12 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  serverExternalPackages: ["firebase-admin"],
+  serverExternalPackages: [
+    "firebase-admin",
+    "jwks-rsa",
+    "jose",
+    "@google-cloud/firestore",
+  ],
   images: {
     remotePatterns: [
       {
