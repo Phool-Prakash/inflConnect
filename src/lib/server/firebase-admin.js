@@ -11,7 +11,23 @@ function normalizePrivateKey(raw) {
   ) {
     key = key.slice(1, -1);
   }
-  return key.replace(/\\n/g, "\n");
+  key = key.replace(/\\n/g, "\n");
+
+  // Vercel often stores the PEM as one line — re-wrap for OpenSSL
+  if (
+    key.includes("-----BEGIN PRIVATE KEY-----") &&
+    key.includes("-----END PRIVATE KEY-----") &&
+    !key.includes("\n")
+  ) {
+    const body = key
+      .replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replace(/\s+/g, "");
+    const lines = body.match(/.{1,64}/g) || [];
+    key = `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`;
+  }
+
+  return key;
 }
 
 function resolveAdminCredentials() {

@@ -1,7 +1,9 @@
-import Link from "next/link";
 import { getAllApprovedIdsServer } from "@/lib/influencers-server";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+/** Generate at request time so Firebase creds are read from runtime env, not build cache */
+export const dynamic = "force-dynamic";
 
 export default async function sitemap() {
   const influencerIds = await getAllApprovedIdsServer();

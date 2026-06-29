@@ -49,6 +49,9 @@ export async function GET() {
     console.error("GET /api/health:", error);
     return jsonError(error.message || "Firebase query failed", 500, {
       firebase: "query_failed",
+      hint: error.message?.includes("UNAUTHENTICATED")
+        ? "FIREBASE_PRIVATE_KEY is invalid or truncated on Vercel. Re-paste as multiline PEM, or use FIREBASE_SERVICE_ACCOUNT (full JSON file)."
+        : undefined,
     });
   }
 }
