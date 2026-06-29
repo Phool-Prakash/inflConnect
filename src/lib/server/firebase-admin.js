@@ -35,16 +35,20 @@ function resolveAdminCredentials() {
     process.env.FIREBASE_SERVICE_ACCOUNT ||
     process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 
-  if (jsonRaw) {
+  if (jsonRaw?.trim()) {
     try {
       const cred = JSON.parse(jsonRaw);
-      return {
-        projectId: cred.project_id,
-        clientEmail: cred.client_email,
-        privateKey: normalizePrivateKey(cred.private_key),
-      };
+      if (cred.project_id && cred.client_email && cred.private_key) {
+        return {
+          projectId: cred.project_id,
+          clientEmail: cred.client_email,
+          privateKey: normalizePrivateKey(cred.private_key),
+        };
+      }
     } catch {
-      throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON.");
+      console.warn(
+        "FIREBASE_SERVICE_ACCOUNT is invalid JSON; falling back to FIREBASE_* vars."
+      );
     }
   }
 
@@ -62,11 +66,7 @@ async function ensureAdminApp() {
 
   initPromise = (async () => {
     let credentials;
-    try {
-      credentials = resolveAdminCredentials();
-    } catch {
-      throw new Error("FIREBASE_SERVICE_ACCOUNT is not valid JSON.");
-    }
+    credentials = resolveAdminCredentials();
 
     const { projectId, clientEmail, privateKey } = credentials;
 

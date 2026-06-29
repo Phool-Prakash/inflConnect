@@ -3,14 +3,7 @@ import { getAdminDb, resolveAdminCredentials } from "@/lib/server/firebase-admin
 
 /** GET /api/health — check Firebase Admin connectivity (for deploy debugging) */
 export async function GET() {
-  let credentials;
-  try {
-    credentials = resolveAdminCredentials();
-  } catch {
-    return jsonError("FIREBASE_SERVICE_ACCOUNT is not valid JSON", 503, {
-      firebase: "invalid_json",
-    });
-  }
+  const credentials = resolveAdminCredentials();
 
   const envStatus = {
     FIREBASE_PROJECT_ID: Boolean(process.env.FIREBASE_PROJECT_ID),
