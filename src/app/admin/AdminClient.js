@@ -47,7 +47,7 @@ export default function AdminClient() {
   const [actionLoading, setActionLoading] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [formSuccess, setFormSuccess] = useState(false);
+  const [formSuccess, setFormSuccess] = useState(null);
   const [dataError, setDataError] = useState(null);
 
   const isAdmin = user && isAdminEmail(user.email);
@@ -332,13 +332,17 @@ export default function AdminClient() {
   async function handleManualAdd(formData) {
     setFormLoading(true);
     setFormError(null);
-    setFormSuccess(false);
+    setFormSuccess(null);
     try {
-      await adminCreateInfluencer(formData);
-      setFormSuccess(true);
+      const result = await adminCreateInfluencer(formData);
+      setFormSuccess(
+        result?.warning
+          ? `Influencer added. Warning: ${result.warning}`
+          : "Influencer added and approved successfully."
+      );
     } catch (err) {
       console.error(err);
-      setFormError("Failed to add influencer. Please try again.");
+      setFormError(err.message || "Failed to add influencer. Please try again.");
     } finally {
       setFormLoading(false);
     }
@@ -716,8 +720,14 @@ export default function AdminClient() {
           {activeTab === "add" && (
             <div className="bg-white rounded-2xl border border-slate-100 p-6 sm:p-8">
               {formSuccess && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm">
-                  Influencer added and approved successfully.
+                <div
+                  className={`mb-6 p-4 rounded-2xl text-sm ${
+                    formSuccess.toLowerCase().includes("warning")
+                      ? "bg-amber-50 border border-amber-200 text-amber-800"
+                      : "bg-green-50 border border-green-200 text-green-700"
+                  }`}
+                >
+                  {formSuccess}
                 </div>
               )}
               {formError && (

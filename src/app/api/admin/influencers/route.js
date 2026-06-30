@@ -10,7 +10,9 @@ import {
   listAllInfluencersServer,
   listInfluencersByStatusServer,
   createInfluencerServer,
+  updateInfluencerServer,
   uploadProfileImageServer,
+  logOnboardingFailure,
 } from "@/lib/server/influencers-service";
 
 /** GET /api/admin/influencers?status=pending|approved */
@@ -62,18 +64,42 @@ export async function POST(request) {
       followerCount: String(formData.get("followerCount") || ""),
       bio: String(formData.get("bio") || ""),
       status: "approved",
+      profilePicUrl: "",
     };
 
+    const fieldErrors = validateInfluencerFields(payload, { requireImage: false });
+    if (fieldErrors.length) {
+      console.warn("POST /api/admin/influencers validation:", fieldErrors.join(", "));
+      await logOnboardingFailure(payload, fieldErrors, {
+        stage: "admin_field_validation",
+      });
+      return jsonError(fieldErrors.join(", "), 400);
+    }
+
+    const sanitized = sanitizeInfluencerInput(payload);
+    sanitized.profilePicUrl = "";
+    const id = await createInfluencerServer(sanitized);
+
     const imageError = validateImageFile(file);
-    if (imageError) return jsonError(imageError, 400);
+    if (imageError) {
+      console.warn("POST /api/admin/influencers image:", imageError, { id });
+      return jsonOk(
+        { id, imageSaved: false, warning: imageError },
+        { status: 201 }
+      );
+    }
 
-    payload.profilePicUrl = await uploadProfileImageServer(file);
-
-    const fieldErrors = validateInfluencerFields(payload, { requireImage: true });
-    if (fieldErrors.length) return jsonError(fieldErrors.join(", "), 400);
-
-    const id = await createInfluencerServer(sanitizeInfluencerInput(payload));
-    return jsonOk({ id }, { status: 201 });
+    try {
+      const profilePicUrl = await uploadProfileImageServer(file);
+      await updateInfluencerServer(id, { profilePicUrl });
+      return jsonOk({ id, imageSaved: true }, { status: 201 });
+    } catch (uploadError) {
+      console.error("POST /api/admin/influencers image upload:", uploadError, { id });
+      return jsonOk(
+        { id, imageSaved: false, warning: "Influencer saved but image upload failed." },
+        { status: 201 }
+      );
+    }
   } catch (error) {
     console.error("POST /api/admin/influencers:", error);
     return jsonError("Failed to create influencer", 500);

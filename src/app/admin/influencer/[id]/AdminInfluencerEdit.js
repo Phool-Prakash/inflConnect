@@ -88,7 +88,7 @@ export default function AdminInfluencerEdit({ id }) {
       setSuccess(true);
     } catch (err) {
       console.error(err);
-      setError("Failed to save changes. Please try again.");
+      setError(err.message || "Failed to save changes. Please try again.");
     } finally {
       setSaving(false);
     }
