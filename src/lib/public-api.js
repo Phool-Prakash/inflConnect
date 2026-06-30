@@ -21,7 +21,7 @@ export async function fetchInfluencerById(id) {
   return parseResponse(res);
 }
 
-/** Public: submit onboarding */
+/** Public: submit onboarding — returns { id, imageSaved?, warning? } */
 export async function submitOnboarding(formData) {
   const body = new FormData();
   body.append("fullName", formData.fullName);

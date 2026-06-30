@@ -12,6 +12,12 @@ import {
 } from "lucide-react";
 import InfluencerForm from "@/components/InfluencerForm";
 import { submitOnboarding } from "@/lib/public-api";
+import { clearOnboardDraft } from "@/lib/onboard-draft";
+import {
+  trackOnboardSubmitAttempt,
+  trackOnboardSubmitSuccess,
+  trackOnboardSubmitError,
+} from "@/lib/analytics";
 
 const STEPS = [
   { title: "Profile", desc: "Photo & basic info" },
@@ -46,17 +52,22 @@ export default function OnboardClient() {
   async function handleSubmit(formData) {
     setLoading(true);
     setError(null);
+    trackOnboardSubmitAttempt();
 
     try {
-      await submitOnboarding(formData);
+      const result = await submitOnboarding(formData);
+      clearOnboardDraft();
+      trackOnboardSubmitSuccess();
+      if (result?.warning) {
+        console.warn("Onboarding warning:", result.warning);
+      }
       setSuccess(true);
     } catch (err) {
       console.error(err);
-      setError(
-        err.message?.includes("Too many")
-          ? err.message
-          : "Something went wrong while submitting your profile. Please try again."
-      );
+      const message =
+        err.message || "Something went wrong while submitting your profile. Please try again.";
+      trackOnboardSubmitError(message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -152,6 +163,7 @@ export default function OnboardClient() {
                 submitLabel="Submit for Review"
                 loading={loading}
                 confirmBeforeSubmit
+                persistDraft
               />
             </div>
           </div>

@@ -5,6 +5,7 @@ import { buildYouTubeUrl, isValidYouTubeInput } from "@/lib/youtube";
 import { buildInstagramUrl, isValidInstagramInput } from "@/lib/instagram";
 import { buildFacebookUrl, isValidFacebookInput } from "@/lib/facebook";
 import { normalizePhone, isValidPhone } from "@/lib/phone";
+import { validateImageFileInput } from "@/lib/image-file";
 
 function normalizeYouTubeField(input) {
   const trimmed = (input || "").trim();
@@ -23,9 +24,6 @@ function normalizeInstagramField(input) {
   if (!trimmed) return "";
   return buildInstagramUrl(trimmed) || "";
 }
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function validateInfluencerFields(data, { requireImage = false } = {}) {
   const errors = [];
@@ -61,12 +59,7 @@ export function validateInfluencerFields(data, { requireImage = false } = {}) {
 }
 
 export function validateImageFile(file) {
-  if (!file || typeof file === "string") return "profile picture is required";
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return "image must be JPG, PNG, or WebP";
-  }
-  if (file.size > MAX_IMAGE_SIZE) return "image must be under 10MB";
-  return null;
+  return validateImageFileInput(file);
 }
 
 export function sanitizeInfluencerInput(data) {

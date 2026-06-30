@@ -9,13 +9,13 @@ import {
   NICHES,
   STATUSES,
   EMAIL_REGEX,
-  MAX_IMAGE_SIZE,
-  ALLOWED_IMAGE_TYPES,
 } from "@/lib/constants";
 import { isValidInstagramInput, buildInstagramUrl } from "@/lib/instagram";
 import { isValidYouTubeInput, buildYouTubeUrl } from "@/lib/youtube";
 import { isValidFacebookInput, buildFacebookUrl } from "@/lib/facebook";
 import { isValidPhone } from "@/lib/phone";
+import { validateImageFileInput } from "@/lib/image-file";
+import { loadOnboardDraft, saveOnboardDraft } from "@/lib/onboard-draft";
 import SubmitReviewModal from "@/components/SubmitReviewModal";
 
 function parseFollowerCount(value) {
@@ -48,6 +48,7 @@ export default function InfluencerForm({
   showStatus = false,
   confirmBeforeSubmit = false,
   showSocialVisitButtons = false,
+  persistDraft = false,
 }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [profilePic, setProfilePic] = useState(null);
@@ -55,6 +56,7 @@ export default function InfluencerForm({
   const [errors, setErrors] = useState({});
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(null);
+  const [draftRestored, setDraftRestored] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -77,6 +79,32 @@ export default function InfluencerForm({
     }
   }, [initialData, existingProfilePicUrl]);
 
+  useEffect(() => {
+    if (!persistDraft || initialData) return;
+    const draft = loadOnboardDraft();
+    if (!draft) return;
+    setForm((prev) => ({
+      ...prev,
+      fullName: draft.fullName ?? prev.fullName,
+      email: draft.email ?? prev.email,
+      phone: draft.phone ?? prev.phone,
+      instagram: draft.instagram ?? prev.instagram,
+      youtube: draft.youtube ?? prev.youtube,
+      facebook: draft.facebook ?? prev.facebook,
+      niche: draft.niche ?? prev.niche,
+      state: draft.state ?? prev.state,
+      city: draft.city ?? prev.city,
+      followerCount: draft.followerCount ?? prev.followerCount,
+      bio: draft.bio ?? prev.bio,
+    }));
+    setDraftRestored(true);
+  }, [persistDraft, initialData]);
+
+  useEffect(() => {
+    if (!persistDraft || initialData) return;
+    saveOnboardDraft(form);
+  }, [form, persistDraft, initialData]);
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -89,18 +117,16 @@ export default function InfluencerForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    const imageError = validateImageFileInput(file);
+    if (imageError) {
       setErrors((prev) => ({
         ...prev,
-        profilePic: "Please upload a JPG, PNG, or WebP image.",
-      }));
-      return;
-    }
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      setErrors((prev) => ({
-        ...prev,
-        profilePic: "Image must be smaller than 10MB.",
+        profilePic:
+          imageError === "image must be JPG, PNG, or WebP"
+            ? "Please upload a JPG, PNG, or WebP image."
+            : imageError === "image must be under 10MB"
+              ? "Image must be smaller than 10MB."
+              : imageError,
       }));
       return;
     }
@@ -209,6 +235,11 @@ export default function InfluencerForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {draftRestored && (
+        <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-800 text-sm">
+          We restored your previous answers. Please re-upload your profile picture if needed.
+        </div>
+      )}
       <div>
         <label className={labelClass}>Profile Picture *</label>
         <div className="flex items-center gap-4">
@@ -224,7 +255,7 @@ export default function InfluencerForm({
               Choose Image
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/*"
                 onChange={handleFileChange}
                 className="hidden"
               />

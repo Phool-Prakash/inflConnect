@@ -1,5 +1,6 @@
 import "server-only";
 import { getAdminDb, getAdminStorage } from "@/lib/server/firebase-admin";
+import { getImageExtension, resolveImageContentType } from "@/lib/image-file";
 
 const COLLECTION = "influencers";
 
@@ -25,13 +26,14 @@ export function toPublicInfluencer(data) {
 export async function uploadProfileImageServer(file) {
   const storage = await getAdminStorage();
   const bucket = storage.bucket();
-  const ext = file.name.split(".").pop() || "jpg";
+  const ext = getImageExtension(file.name) || "jpg";
   const path = `influencers/${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+  const contentType = resolveImageContentType(file);
 
   const fileRef = bucket.file(path);
   await fileRef.save(buffer, {
-    metadata: { contentType: file.type },
+    metadata: { contentType },
   });
   await fileRef.makePublic();
 
@@ -103,6 +105,33 @@ export async function createInfluencerServer(data) {
     createdAt: FieldValue.serverTimestamp(),
   });
   return ref.id;
+}
+
+/** Persist failed onboarding attempts for admin review. */
+export async function logOnboardingFailure(data, errors, meta = {}) {
+  try {
+    const db = await getAdminDb();
+    if (!db) return;
+    const { FieldValue } = await import("firebase-admin/firestore");
+    await db.collection("onboarding_failures").add({
+      fullName: data.fullName || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      instagram: data.instagram || "",
+      youtube: data.youtube || "",
+      facebook: data.facebook || "",
+      niche: data.niche || "",
+      state: data.state || "",
+      city: data.city || "",
+      followerCount: data.followerCount || "",
+      bio: data.bio || "",
+      errors: Array.isArray(errors) ? errors : [String(errors)],
+      ...meta,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("logOnboardingFailure:", err);
+  }
 }
 
 export async function updateInfluencerServer(id, data) {
