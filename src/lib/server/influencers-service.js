@@ -4,6 +4,21 @@ import { getImageExtension, resolveImageContentType } from "@/lib/image-file";
 
 const COLLECTION = "influencers";
 
+function followerCountValue(inf) {
+  const n = Number(inf.followerCount);
+  if (inf.followerCount == null || inf.followerCount === "" || isNaN(n)) return -1;
+  return n;
+}
+
+/** Highest followers first; missing counts last; tie-break by newest. */
+function sortByFollowersDesc(a, b) {
+  const byFollowers = followerCountValue(b) - followerCountValue(a);
+  if (byFollowers !== 0) return byFollowers;
+  const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+  const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+  return bTime - aTime;
+}
+
 function docToObject(snapshot) {
   if (!snapshot.exists) return null;
   const data = snapshot.data();
@@ -53,11 +68,7 @@ export async function listApprovedInfluencersServer({ city } = {}) {
     results = results.filter((inf) => inf.city === city);
   }
 
-  return results.sort((a, b) => {
-    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return bTime - aTime;
-  });
+  return results.sort(sortByFollowersDesc);
 }
 
 export async function getInfluencerServer(id, { admin = false } = {}) {

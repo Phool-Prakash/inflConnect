@@ -18,9 +18,7 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        // Composite indexes required in Firestore:
-        // (status ASC, createdAt DESC) for All Cities
-        // (status ASC, city ASC, createdAt DESC) for city filter
+        // Approved list is sorted by follower count (highest first) on the server.
         const data = await fetchApprovedInfluencers({
           city: selectedCity === "All Cities" ? null : selectedCity,
         });
